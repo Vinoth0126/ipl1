@@ -1,434 +1,676 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ta">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPL Mega Auction 2026 - Broadcast Edition</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <style>
-        body {
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
-            color: #f8fafc;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-height: 100vh;
-        }
-        .stadium-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            box-shadow: 0 0 35px rgba(56, 189, 248, 0.15), inset 0 0 15px rgba(56, 189, 248, 0.05);
-        }
-        .neon-title {
-            text-shadow: 0 0 20px rgba(250, 204, 21, 0.6), 0 0 40px rgba(250, 204, 21, 0.3);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPL Mega Auction 2026 - Ultra Broadcast Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    /* STADIUM GLOW BACKGROUND & ANIMATIONS */
+    body {
+      background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(234, 179, 8, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes splashAnim {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-splash {
+      animation: splashAnim 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+    .animate-marquee {
+      display: inline-block;
+      white-space: nowrap;
+      animation: marquee 16s linear infinite;
+    }
+    @keyframes hammerDrop {
+      0% { transform: translateY(-50px) rotate(-45deg); opacity: 0; }
+      50% { transform: translateY(0) rotate(15deg); opacity: 1; }
+      100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    }
+    .animate-hammer {
+      animation: hammerDrop 0.4s ease-out forwards;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+  </style>
 </head>
-<body class="flex flex-col items-center justify-start p-4 md:p-6">
+<body class="text-white min-h-screen p-2 md:p-4 flex flex-col items-center justify-start font-sans pb-16 relative z-10">
 
-    <!-- Splash & Setup Screen -->
-    <div id="setup-screen" class="w-full max-w-md stadium-card rounded-2xl p-6 shadow-2xl mt-12">
-        <h1 class="text-2xl font-black text-yellow-400 text-center mb-6 neon-title uppercase">IPL Mega Auction 2026</h1>
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Your Name / Host</label>
-                <input type="text" id="user-name" placeholder="e.g. Vinoth" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
-            </div>
-            <div>
-                <label class="block text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Select Franchise</label>
-                <select id="user-team" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
-                    <option value="CSK">Chennai Super Kings (CSK)</option>
-                    <option value="RCB">Royal Challengers Bengaluru (RCB)</option>
-                    <option value="MI">Mumbai Indians (MI)</option>
-                    <option value="KKR">Kolkata Knight Riders (KKR)</option>
-                    <option value="LSG">Lucknow Super Giants (LSG)</option>
-                    <option value="GT">Gujarat Titans (GT)</option>
-                    <option value="SRH">Sunrisers Hyderabad (SRH)</option>
-                    <option value="DC">Delhi Capitals (DC)</option>
-                    <option value="PBKS">Punjab Kings (PBKS)</option>
-                    <option value="RR">Rajasthan Royals (RR)</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Room ID</label>
-                <input type="text" id="room-id" value="IPL2026" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
-            </div>
-            <button onclick="joinAuction()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 cursor-pointer uppercase tracking-wider">
-                Enter Auction Arena 🚀
-            </button>
-        </div>
+  <!-- 0. VINOTH INTRO SPLASH SCREEN -->
+  <div id="splash-screen" class="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-50 transition-opacity duration-500">
+    <div class="relative flex flex-col items-center animate-splash">
+      <span class="text-7xl md:text-9xl filter drop-shadow-[0_10px_25px_rgba(234,179,8,0.9)] transform -rotate-6 -mb-4 z-10">👑</span>
+      <h1 class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-600 tracking-widest drop-shadow-[0_10px_35px_rgba(234,179,8,0.6)]">
+        VINOTH
+      </h1>
+    </div>
+    <p class="text-yellow-400 text-sm mt-6 font-bold tracking-widest uppercase animate-pulse">CONNECTING TO STADIUM ARENA...</p>
+  </div>
+
+  <h1 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 my-3 text-center tracking-wider drop-shadow-[0_5px_15px_rgba(234,179,8,0.4)]">
+    🏏 IPL MEGA AUCTION 2026 🏏
+  </h1>
+
+  <!-- 1. ROOM & TEAM SELECTION SETUP -->
+  <div id="setup-box" class="glass-card p-6 rounded-3xl shadow-2xl w-full max-w-lg my-auto relative overflow-hidden border-yellow-500/20">
+    <div class="absolute -top-12 -left-12 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl"></div>
+    <h2 class="text-xl font-black mb-5 text-center text-yellow-400 tracking-wide uppercase">1. Room Code & Team Select</h2>
+    
+    <label class="text-xs font-bold text-slate-400 mb-1 block uppercase tracking-wider">Room Code:</label>
+    <input id="roomCode" type="text" placeholder="Enter Room Code (e.g. IPL2026)" oninput="checkTakenTeams()" class="w-full p-3.5 rounded-xl text-black font-extrabold mb-4 text-center text-lg uppercase outline-none focus:ring-4 focus:ring-yellow-400/50 bg-slate-100 transition-all">
+
+    <label class="text-xs font-bold text-slate-400 mb-1 block uppercase tracking-wider">Choose Your Franchise:</label>
+    <select id="teamSelect" class="w-full p-3.5 rounded-xl text-black font-extrabold mb-5 text-base outline-none focus:ring-4 focus:ring-yellow-400/50 bg-white shadow-md">
+      <option value="" disabled selected>-- Select Your Team --</option>
+      <option value="CSK">Chennai Super Kings (CSK)</option>
+      <option value="MI">Mumbai Indians (MI)</option>
+      <option value="RCB">Royal Challengers Bengaluru (RCB)</option>
+      <option value="KKR">Kolkata Knight Riders (KKR)</option>
+      <option value="DC">Delhi Capitals (DC)</option>
+      <option value="GT">Gujarat Titans (GT)</option>
+      <option value="RR">Rajasthan Royals (RR)</option>
+      <option value="SRH">Sunrisers Hyderabad (SRH)</option>
+      <option value="LSG">Lucknow Super Giants (LSG)</option>
+      <option value="PBKS">Punjab Kings (PBKS)</option>
+    </select>
+
+    <!-- Host Checkbox -->
+    <div class="flex items-center gap-3 mb-6 bg-slate-900/80 p-3.5 rounded-xl border border-slate-700 shadow-inner">
+      <input type="checkbox" id="isHost" class="w-5 h-5 accent-yellow-500 cursor-pointer">
+      <label for="isHost" class="text-sm font-black text-yellow-300 cursor-pointer">I am the Auction Host 👑</label>
     </div>
 
-    <!-- Main Auction Arena -->
-    <main id="auction-arena" class="w-full max-w-5xl stadium-card rounded-2xl p-6 shadow-2xl hidden">
+    <button onclick="joinRoom()" class="w-full bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 hover:from-yellow-300 hover:to-amber-400 text-slate-950 font-black py-4 rounded-xl shadow-xl text-lg transition-all active:scale-95 shadow-yellow-500/30 uppercase tracking-wide">
+      ENTER AUCTION ROOM 🚀
+    </button>
+  </div>
+
+  <!-- 2. LIVE AUCTION ARENA -->
+  <div id="game-box" class="hidden glass-card p-4 md:p-6 rounded-3xl shadow-2xl w-full max-w-3xl text-center relative border-yellow-500/30">
+    
+    <!-- Header Info & Liquid Animated Purse Bar -->
+    <div class="bg-slate-950/80 p-3.5 rounded-2xl mb-4 border border-slate-800 shadow-inner">
+      <div class="flex justify-between items-center text-xs md:text-sm font-bold mb-2">
+        <span class="text-yellow-400 tracking-wider" id="displayRoom">Room: -</span>
+        <span class="text-emerald-400">My Franchise: <span id="displayTeam" class="font-extrabold text-white underline decoration-yellow-400">-</span></span>
+        <span class="text-cyan-400">Purse Left: ₹<span id="displayPurse" class="font-extrabold">120.00</span> Cr</span>
+      </div>
+      <!-- Liquid Gradient Progress Bar -->
+      <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-800 p-0.5">
+        <div id="purseBar" class="bg-gradient-to-r from-emerald-600 via-emerald-400 to-teal-400 h-full rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(16,185,129,0.5)]" style="width: 100%;"></div>
+      </div>
+    </div>
+
+    <!-- 3D Glassmorphic Current Player Card -->
+    <div id="playerCardWrapper" class="bg-gradient-to-b from-slate-800/90 to-slate-900/90 p-5 md:p-6 rounded-2xl border border-slate-700/80 mb-4 shadow-2xl flex flex-col md:flex-row items-center gap-5 justify-center relative overflow-hidden transition-all duration-300">
+      <div class="absolute -top-12 -right-12 w-40 h-40 bg-yellow-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="relative">
+        <img id="playerImage" src="" class="w-32 h-32 md:w-36 md:h-36 object-cover rounded-2xl border-2 border-yellow-400/80 shadow-2xl bg-slate-950 transform hover:scale-105 transition-transform" alt="Player Image">
+        <div class="absolute bottom-1 right-1 bg-yellow-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-md shadow">2026</div>
+      </div>
+
+      <div class="text-center md:text-left z-10">
+        <span class="bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider mb-2.5 inline-block shadow-md" id="playerRole">BATSMAN</span>
+        <h3 class="text-3xl md:text-4xl font-black text-white my-1 tracking-tight drop-shadow-md" id="playerName">Virat Kohli</h3>
+        <p class="text-slate-300 text-sm font-semibold">Base Price: <span class="text-yellow-400 font-bold">₹<span id="playerBasePrice">2.00</span> Cr</span></p>
+        <p class="text-xs text-slate-400 mt-1.5 font-medium">Player <span id="currentPlayerNo" class="text-white font-bold">1</span> of <span id="totalPlayersNo">0</span> in Pool</p>
+      </div>
+    </div>
+
+    <!-- Live Bid & Timer Box -->
+    <div class="bg-slate-950/80 p-4 rounded-2xl mb-4 border border-slate-800 grid grid-cols-2 gap-2 items-center shadow-inner">
+      <div>
+        <p class="text-slate-400 text-xs font-black uppercase tracking-widest">Current Highest Bid</p>
+        <p class="text-3xl md:text-4xl font-black text-emerald-400 my-1 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">₹ <span id="currentBid">0.00</span> Cr</p>
+        <p class="text-slate-300 text-xs mt-1">By: <span id="highestBidder" class="font-extrabold text-yellow-400 bg-yellow-500/10 px-2.5 py-1 rounded-lg border border-yellow-500/20 shadow-sm">None</span></p>
+      </div>
+      <div class="border-l border-slate-800/80 pl-2">
+        <p class="text-slate-400 text-xs font-black uppercase tracking-widest">Bid Timer</p>
+        <p id="timerDisplay" class="text-4xl md:text-5xl font-black text-red-500 my-1 drop-shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-pulse">10s</p>
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Auto Sold on 0s</p>
+      </div>
+    </div>
+
+    <!-- MULTI-BID & RTM BUTTONS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
+      <button onclick="placeBid(0.50)" class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 active:scale-95 text-white font-black py-3.5 px-1 rounded-xl shadow-lg text-xs md:text-sm tracking-tight transition-all shadow-emerald-600/20 border border-emerald-500/30">
+        + ₹50 LAKHS
+      </button>
+      <button onclick="placeBid(2.00)" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 active:scale-95 text-white font-black py-3.5 px-1 rounded-xl shadow-lg text-xs md:text-sm tracking-tight transition-all shadow-blue-600/20 border border-blue-500/30">
+        + ₹2 CRORES
+      </button>
+      <button onclick="placeBid(5.00)" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 active:scale-95 text-white font-black py-3.5 px-1 rounded-xl shadow-lg text-xs md:text-sm tracking-tight transition-all shadow-red-600/20 border border-red-500/30">
+        + ₹5 CRORES
+      </button>
+      <button onclick="useRTM()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-95 text-slate-950 font-black py-3.5 px-1 rounded-xl shadow-lg text-xs md:text-sm tracking-tight transition-all shadow-amber-500/20 border border-amber-300">
+        🃏 USE RTM!
+      </button>
+    </div>
+
+    <!-- LIVE BID STREAM ACTIVITY LOG -->
+    <div class="bg-slate-950/90 p-3.5 rounded-2xl mb-4 border border-slate-800 text-left shadow-inner">
+      <h4 class="text-xs font-black text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span> Live Bidding Stream
+      </h4>
+      <div id="activityLog" class="h-20 overflow-y-auto text-xs text-slate-300 space-y-1 pr-1 scrollbar-thin">
+        <p class="text-slate-500 italic">No bids placed yet...</p>
+      </div>
+    </div>
+
+    <!-- ALL TEAMS LEADERBOARD & SQUAD TRACKER -->
+    <div class="bg-slate-950/90 p-4 rounded-2xl mb-4 border border-slate-800 text-left shadow-inner">
+      <h4 class="text-sm font-black text-yellow-400 mb-3 border-b border-slate-800 pb-2 flex justify-between items-center tracking-wide">
+        <span>🏆 All Franchises Purse & Squads</span>
+        <span class="text-xs text-slate-400 font-normal">(Click team to inspect squad)</span>
+      </h4>
+      <div id="allTeamsGrid" class="grid grid-cols-2 md:grid-cols-5 gap-2.5"></div>
+    </div>
+
+    <!-- HOST ONLY CONTROLS -->
+    <div id="host-controls" class="hidden border-t border-slate-800 pt-4 mt-4 grid grid-cols-2 gap-3">
+      <button onclick="sellPlayer()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold py-3.5 rounded-xl shadow-md transition active:scale-95 uppercase tracking-wide text-xs">
+        🔨 MANUAL SOLD!
+      </button>
+      <button onclick="nextPlayer()" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-extrabold py-3.5 rounded-xl shadow-md transition active:scale-95 uppercase tracking-wide text-xs">
+        NEXT PLAYER ➡️
+      </button>
+    </div>
+
+  </div>
+
+  <!-- TV TELECAST LIVE TICKER BANNER -->
+  <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black py-2.5 border-t-2 border-yellow-200 overflow-hidden shadow-[0_-10px_25px_rgba(234,179,8,0.3)] z-40 text-xs md:text-sm">
+    <div class="animate-marquee flex items-center gap-8">
+      <span>📺 IPL MEGA AUCTION 2026 LIVE BROADCAST</span>
+      <span>•</span>
+      <span id="tickerNews">WELCOME TO THE ULTIMATE STADIUM AUCTION ARENA! 150+ PLAYERS READY FOR GRABS.</span>
+    </div>
+  </div>
+
+  <script>
+    // AUTO HIDE SPLASH SCREEN
+    window.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        const splash = document.getElementById("splash-screen");
+        splash.style.opacity = "0";
+        setTimeout(() => { splash.style.display = "none"; }, 500);
+      }, 2000);
+    });
+
+    // Firebase Setup
+    const firebaseConfig = {
+      databaseURL: "https://ipl-auction-multiplayer-34a38-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
+    const teamLogos = {
+      CSK: "https://upload.wikimedia.org/wikipedia/en/2/2b/Chennai_Super_Kings_Logo.svg",
+      MI: "https://upload.wikimedia.org/wikipedia/en/c/cd/Mumbai_Indians_Logo.svg",
+      RCB: "https://upload.wikimedia.org/wikipedia/en/2/2a/Royal_Challengers_Bangalore_2020.svg",
+      KKR: "https://upload.wikimedia.org/wikipedia/en/4/4c/Kolkata_Knight_Riders_Logo.svg",
+      DC: "https://upload.wikimedia.org/wikipedia/en/2/2f/Delhi_Capitals_Logo.svg",
+      GT: "https://upload.wikimedia.org/wikipedia/en/0/09/Gujarat_Titans_Logo.svg",
+      RR: "https://upload.wikimedia.org/wikipedia/en/6/60/Rajasthan_Royals_Logo.svg",
+      SRH: "https://upload.wikimedia.org/wikipedia/en/8/81/Sunrisers_Hyderabad_Logo.svg",
+      LSG: "https://upload.wikimedia.org/wikipedia/en/a/a9/Lucknow_Super_Giants_IPL_Logo.svg",
+      PBKS: "https://upload.wikimedia.org/wikipedia/en/d/d4/Punjab_Kings_Logo.svg"
+    };
+
+    // 150+ COMPREHENSIVE PLAYERS LIST
+    const rawPlayers = [
+      ["Virat Kohli", "BATSMAN", 2.0], ["Rohit Sharma", "BATSMAN", 2.0], ["Yashasvi Jaiswal", "BATSMAN", 2.0],
+      ["Shubman Gill", "BATSMAN", 2.0], ["Ruturaj Gaikwad", "BATSMAN", 2.0], ["Suryakumar Yadav", "BATSMAN", 2.0],
+      ["Travis Head", "BATSMAN", 2.0], ["Shreyas Iyer", "BATSMAN", 2.0], ["Rinku Singh", "BATSMAN", 1.5],
+      ["David Warner", "BATSMAN", 2.0], ["Steve Smith", "BATSMAN", 2.0], ["Kane Williamson", "BATSMAN", 2.0],
+      ["Faf du Plessis", "BATSMAN", 2.0], ["Sai Sudharsan", "BATSMAN", 1.5], ["Devdutt Padikkal", "BATSMAN", 1.0],
+      ["Tilak Varma", "BATSMAN", 1.5], ["Rajat Patidar", "BATSMAN", 1.0], ["Prithvi Shaw", "BATSMAN", 1.0],
+      ["Mayank Agarwal", "BATSMAN", 1.0], ["Ajinkya Rahane", "BATSMAN", 1.0], ["Rahul Tripathi", "BATSMAN", 1.0],
+      ["Sherfane Rutherford", "BATSMAN", 1.0], ["Rovman Powell", "BATSMAN", 1.5], ["Shimron Hetmyer", "BATSMAN", 1.5],
+      ["Tim David", "BATSMAN", 1.5], ["Harry Brook", "BATSMAN", 2.0], ["Jake Fraser-McGurk", "BATSMAN", 1.5],
+      ["Rilee Rossouw", "BATSMAN", 1.5], ["Angkrish Raghuvanshi", "BATSMAN", 0.75], ["Nehal Wadhera", "BATSMAN", 0.75],
+      ["Abhinav Sadarangani", "BATSMAN", 0.75], ["Manish Pandey", "BATSMAN", 0.75], ["Karun Nair", "BATSMAN", 0.5],
+      ["Ankit Rawat", "BATSMAN", 0.5], ["Atharva Taide", "BATSMAN", 0.75], ["Priyansh Arya", "BATSMAN", 0.75],
+      ["Sameer Rizvi", "BATSMAN", 0.75], ["Swastik Chikara", "BATSMAN", 0.5], ["Ashutosh Sharma", "BATSMAN", 0.75],
+
+      ["MS Dhoni", "WK / BATSMAN", 2.0], ["Rishabh Pant", "WK / BATSMAN", 2.0], ["KL Rahul", "WK / BATSMAN", 2.0],
+      ["Sanju Samson", "WK / BATSMAN", 2.0], ["Ishan Kishan", "WK / BATSMAN", 2.0], ["Jos Buttler", "WK / BATSMAN", 2.0],
+      ["Quinton de Kock", "WK / BATSMAN", 2.0], ["Nicholas Pooran", "WK / BATSMAN", 2.0], ["Heinrich Klaasen", "WK / BATSMAN", 2.0],
+      ["Phil Salt", "WK / BATSMAN", 2.0], ["Dhruv Jurel", "WK / BATSMAN", 1.5], ["Jitesh Sharma", "WK / BATSMAN", 1.5],
+      ["Prabhsimran Singh", "WK / BATSMAN", 1.0], ["Anuj Rawat", "WK / BATSMAN", 0.75], ["KS Bharat", "WK / BATSMAN", 0.75],
+      ["Vishnu Vinod", "WK / BATSMAN", 0.5], ["Robin Minz", "WK / BATSMAN", 0.75], ["Kumar Kushagra", "WK / BATSMAN", 0.75],
+      ["Donavon Ferreira", "WK / BATSMAN", 0.75], ["Shai Hope", "WK / BATSMAN", 1.5], ["Matthew Wade", "WK / BATSMAN", 1.5],
+      ["Jonny Bairstow", "WK / BATSMAN", 2.0], ["Sam Billings", "WK / BATSMAN", 1.0], ["Litton Das", "WK / BATSMAN", 1.0],
+
+      ["Hardik Pandya", "ALL-ROUNDER", 2.0], ["Ravindra Jadeja", "ALL-ROUNDER", 2.0], ["Axar Patel", "ALL-ROUNDER", 2.0],
+      ["Shivam Dube", "ALL-ROUNDER", 2.0], ["Glenn Maxwell", "ALL-ROUNDER", 2.0], ["Andre Russell", "ALL-ROUNDER", 2.0],
+      ["Sunil Narine", "ALL-ROUNDER", 2.0], ["Marcus Stoinis", "ALL-ROUNDER", 2.0], ["Liam Livingstone", "ALL-ROUNDER", 2.0],
+      ["Mitchell Marsh", "ALL-ROUNDER", 2.0], ["Sam Curran", "ALL-ROUNDER", 2.0], ["Rachin Ravindra", "ALL-ROUNDER", 1.5],
+      ["Cameron Green", "ALL-ROUNDER", 2.0], ["Will Jacks", "ALL-ROUNDER", 2.0], ["Washington Sundar", "ALL-ROUNDER", 1.5],
+      ["Nitish Kumar Reddy", "ALL-ROUNDER", 1.0], ["Riyan Parag", "ALL-ROUNDER", 1.5], ["Abhishek Sharma", "ALL-ROUNDER", 1.5],
+      ["Shahrukh Khan", "ALL-ROUNDER", 1.0], ["Rahul Tewatia", "ALL-ROUNDER", 1.5], ["Krunal Pandya", "ALL-ROUNDER", 1.5],
+      ["Shardul Thakur", "ALL-ROUNDER", 1.5], ["Deepak Hooda", "ALL-ROUNDER", 1.0], ["Vijay Shankar", "ALL-ROUNDER", 0.75],
+      ["Krishnappa Gowtham", "ALL-ROUNDER", 0.5], ["Marco Jansen", "ALL-ROUNDER", 1.5], ["Azmatullah Omarzai", "ALL-ROUNDER", 1.0],
+      ["Romario Shepherd", "ALL-ROUNDER", 1.5], ["Jason Holder", "ALL-ROUNDER", 1.5], ["Daryl Mitchell", "ALL-ROUNDER", 1.5],
+      ["Mitchell Santner", "ALL-ROUNDER", 1.0], ["Moeen Ali", "ALL-ROUNDER", 2.0], ["Wanindu Hasaranga", "ALL-ROUNDER", 2.0],
+      ["Shakib Al Hasan", "ALL-ROUNDER", 1.5], ["Sikandar Raza", "ALL-ROUNDER", 1.0], ["Daniel Sams", "ALL-ROUNDER", 1.0],
+      ["David Willey", "ALL-ROUNDER", 1.5], ["Dwaine Pretorius", "ALL-ROUNDER", 1.0], ["Audrey Smith", "ALL-ROUNDER", 0.5],
+
+      ["Jasprit Bumrah", "BOWLER", 2.0], ["Mohammed Shami", "BOWLER", 2.0], ["Mohammed Siraj", "BOWLER", 2.0],
+      ["Kuldeep Yadav", "BOWLER", 2.0], ["Yuzvendra Chahal", "BOWLER", 2.0], ["Arshdeep Singh", "BOWLER", 2.0],
+      ["Trent Boult", "BOWLER", 2.0], ["Pat Cummins", "BOWLER", 2.0], ["Mitchell Starc", "BOWLER", 2.0],
+      ["Kagiso Rabada", "BOWLER", 2.0], ["Rashid Khan", "BOWLER", 2.0], ["Varun Chakaravarthy", "BOWLER", 2.0],
+      ["Deepak Chahar", "BOWLER", 1.5], ["Bhuvneshwar Kumar", "BOWLER", 1.5], ["Harshal Patel", "BOWLER", 1.5],
+      ["T Natarajan", "BOWLER", 1.5], ["Avesh Khan", "BOWLER", 1.5], ["Prasidh Krishna", "BOWLER", 1.5],
+      ["Umran Malik", "BOWLER", 1.0], ["Mayank Yadav", "BOWLER", 1.5], ["Harshit Rana", "BOWLER", 1.0],
+      ["Tushar Deshpande", "BOWLER", 1.0], ["Mukesh Kumar", "BOWLER", 1.0], ["Khaleel Ahmed", "BOWLER", 1.0],
+      ["Yash Dayal", "BOWLER", 1.0], ["Akash Madhwal", "BOWLER", 0.75], ["Mohit Sharma", "BOWLER", 1.0],
+      ["Rahul Chahar", "BOWLER", 1.0], ["Ravi Bishnoi", "BOWLER", 1.5], ["Suyash Sharma", "BOWLER", 0.75],
+      ["Piyush Chawla", "BOWLER", 1.0], ["Amit Mishra", "BOWLER", 0.5], ["Maheesh Theekshana", "BOWLER", 1.5],
+      ["Matheesha Pathirana", "BOWLER", 2.0], ["Noor Ahmad", "BOWLER", 1.5], ["Spencer Johnson", "BOWLER", 1.0],
+      ["Gerald Coetzee", "BOWLER", 1.5], ["Nandre Burger", "BOWLER", 1.0], ["Lockie Ferguson", "BOWLER", 1.5],
+      ["Anrich Nortje", "BOWLER", 1.5], ["Adam Zampa", "BOWLER", 1.5], ["Adil Rashid", "BOWLER", 1.0],
+      ["Ish Sodhi", "BOWLER", 0.75], ["Josh Hazlewood", "BOWLER", 2.0], ["Nathan Ellis", "BOWLER", 1.0],
+      ["Fazalhaq Farooqi", "BOWLER", 1.0], ["Naveen-ul-Haq", "BOWLER", 1.0], ["Mustafizur Rahman", "BOWLER", 1.5],
+      ["Akash Deep", "BOWLER", 0.75], ["Mohsin Khan", "BOWLER", 1.0], ["Simarjeet Singh", "BOWLER", 0.75]
+    ];
+
+    const playersList = rawPlayers.map((p) => ({
+      name: p[0], role: p[1], basePrice: p[2],
+      image: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(p[0])}`
+    }));
+
+    let currentRoom = "";
+    let myTeam = "";
+    let myPurse = 120.0;
+    let currentBidValue = 0;
+    let amIHost = false;
+    let lastSoldTrigger = 0;
+    let countdownInterval = null;
+    let audioCtx = null;
+    let roomTeamsData = {};
+
+    function checkTakenTeams() {
+      const code = document.getElementById("roomCode").value.trim().toUpperCase();
+      if (!code) return;
+
+      db.ref("rooms/" + code + "/teams").on("value", (snapshot) => {
+        const takenTeams = snapshot.val() || {};
+        const select = document.getElementById("teamSelect");
         
-        <!-- Room & Purse Info -->
-        <div class="flex flex-wrap justify-between items-center mb-6 border-b border-slate-700 pb-4 text-sm md:text-base font-medium text-slate-300">
-            <div>Room: <span id="display-room" class="text-yellow-400 font-bold">IPL2026</span></div>
-            <div>Franchise: <span id="display-team" class="text-emerald-400 font-bold">LSG</span></div>
-            <div>Purse Left: <span id="display-purse" class="text-cyan-400 font-bold">₹120.00 Cr</span></div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left & Center: Player Card & Bidding -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Player Card Arena -->
-                <div class="flex flex-col items-center justify-center bg-slate-900/80 border border-slate-700/60 rounded-xl p-6 shadow-inner">
-                    <span id="player-role" class="bg-amber-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-lg">
-                        Batsman
-                    </span>
-                    
-                    <div class="w-28 h-28 md:w-32 md:h-32 bg-gradient-to-tr from-pink-500 to-rose-400 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/20 mb-4 transform hover:scale-105 transition-transform duration-300">
-                        <svg class="w-16 h-16 text-white drop-shadow-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                    </div>
-
-                    <h2 id="player-name" class="text-2xl md:text-3xl font-extrabold text-white tracking-wide">Virat Kohli</h2>
-                    <p class="text-slate-400 text-sm mt-1">Base Price: <span id="player-base" class="text-emerald-400 font-semibold">₹2.00 Cr</span></p>
-                    <p class="text-slate-500 text-xs mt-1">Player <span id="player-index" class="text-slate-300 font-bold">1</span> of Pool (Sorted Sets)</p>
-                </div>
-
-                <!-- Bidding Stats & Timer -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 text-center shadow-md">
-                        <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">Current Highest Bid</p>
-                        <div id="current-bid" class="text-3xl font-black text-emerald-400 drop-shadow">₹2.00 Cr</div>
-                        <p class="text-xs text-slate-400 mt-1">By: <span id="bidder-name" class="text-white font-medium">None</span></p>
-                    </div>
-                    
-                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 text-center shadow-md">
-                        <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">Bid Timer</p>
-                        <div id="bid-timer" class="text-3xl font-black text-rose-500 drop-shadow animate-pulse">15s</div>
-                        <p class="text-xs text-slate-400 mt-1">Auto Sold on 0s</p>
-                    </div>
-                </div>
-
-                <!-- Action Bidding Buttons -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <button onclick="placeBid(0.5)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 transform active:scale-95 text-sm cursor-pointer">
-                        + ₹50 LAKHS
-                    </button>
-                    <button onclick="placeBid(2)" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 transform active:scale-95 text-sm cursor-pointer">
-                        + ₹2 CRORES
-                    </button>
-                    <button onclick="placeBid(5)" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 transform active:scale-95 text-sm cursor-pointer">
-                        + ₹5 CRORES
-                    </button>
-                    <button onclick="useRTM()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-3 px-4 rounded-xl shadow-lg transition duration-200 transform active:scale-95 text-sm cursor-pointer">
-                        ⚡ USE RTM!
-                    </button>
-                </div>
-
-                <!-- Host Controls -->
-                <div class="flex justify-center gap-4">
-                    <button onclick="nextPlayer()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition text-xs uppercase tracking-wider cursor-pointer">
-                        ⏭️ Next Player
-                    </button>
-                    <button onclick="soldPlayer()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition text-xs uppercase tracking-wider cursor-pointer">
-                        🔨 Mark Sold
-                    </button>
-                </div>
-            </div>
-
-            <!-- Right Sidebar: Team Purses & Live Stream Messages -->
-            <div class="space-y-6">
-                <!-- Teams Financial Status Board -->
-                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-md">
-                    <h3 class="text-xs uppercase tracking-widest text-yellow-400 font-bold mb-3 border-b border-slate-800 pb-2">Franchise Purses & Squads</h3>
-                    <div id="teams-status-list" class="space-y-2 text-xs">
-                        <!-- Dynamically populated team financial statuses -->
-                    </div>
-                </div>
-
-                <!-- Live Bidding Stream Log (Messages) -->
-                <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 h-64 flex flex-col">
-                    <h3 class="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Live Bidding Messages</h3>
-                    <div id="bidding-stream" class="flex-1 overflow-y-auto space-y-2 text-xs text-slate-300 pr-1">
-                        <div class="text-slate-500 italic">Auction session started. Waiting for bids...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <script>
-        // Player Pool categorized and sorted by sets: Batsman -> Wicketkeeper -> All-Rounder -> Bowler
-        const rawPlayerPool = [
-            { name: "Virat Kohli", role: "Batsman", base: 2.0 },
-            { name: "Rohit Sharma", role: "Batsman", base: 2.0 },
-            { name: "Suryakumar Yadav", role: "Batsman", base: 2.0 },
-            { name: "Travis Head", role: "Batsman", base: 2.0 },
-            { name: "Shreyas Iyer", role: "Batsman", base: 2.0 },
-            { name: "Yashasvi Jaiswal", role: "Batsman", base: 1.5 },
-            { name: "Shubman Gill", role: "Batsman", base: 2.0 },
-            { name: "Faf du Plessis", role: "Batsman", base: 2.0 },
-            { name: "David Warner", role: "Batsman", base: 2.0 },
-            { name: "Kane Williamson", role: "Batsman", base: 2.0 },
-            { name: "Rinku Singh", role: "Batsman", base: 1.5 },
-            { name: "Tilak Varma", role: "Batsman", base: 1.5 },
-            { name: "Jake Fraser-McGurk", role: "Batsman", base: 1.0 },
-            { name: "Aiden Markram", role: "Batsman", base: 2.0 },
-            { name: "Rahul Tripathi", role: "Batsman", base: 1.0 },
-            { name: "Rilee Rossouw", role: "Batsman", base: 1.5 },
-            { name: "Devdutt Padikkal", role: "Batsman", base: 1.0 },
-            { name: "Rajat Patidar", role: "Batsman", base: 1.0 },
-            { name: "Ajinkya Rahane", role: "Batsman", base: 1.5 },
-            { name: "Prithvi Shaw", role: "Batsman", base: 1.5 },
-            { name: "Manish Pandey", role: "Batsman", base: 1.0 },
-            { name: "Nehal Wadhera", role: "Batsman", base: 0.5 },
-            { name: "Ashutosh Sharma", role: "Batsman", base: 0.5 },
-            { name: "Shashank Singh", role: "Batsman", base: 0.75 },
-            { name: "Angkrish Raghuvanshi", role: "Batsman", base: 0.5 },
-            { name: "Sameer Rizvi", role: "Batsman", base: 0.75 },
-            { name: "Sai Sudharsan", role: "Batsman", base: 1.5 },
-            { name: "Shaik Rasheed", role: "Batsman", base: 0.5 },
-
-            { name: "MS Dhoni", role: "Wicketkeeper", base: 2.0 },
-            { name: "Jos Buttler", role: "Wicketkeeper", base: 2.0 },
-            { name: "Rishabh Pant", role: "Wicketkeeper", base: 2.0 },
-            { name: "Sanju Samson", role: "Wicketkeeper", base: 2.0 },
-            { name: "KL Rahul", role: "Wicketkeeper", base: 2.0 },
-            { name: "Heinrich Klaasen", role: "Wicketkeeper", base: 2.0 },
-            { name: "Phil Salt", role: "Wicketkeeper", base: 1.5 },
-            { name: "Quinton de Kock", role: "Wicketkeeper", base: 2.0 },
-            { name: "Ishan Kishan", role: "Wicketkeeper", base: 2.0 },
-            { name: "Nicholas Pooran", role: "Wicketkeeper", base: 2.0 },
-            { name: "Tristan Stubbs", role: "Wicketkeeper", base: 1.0 },
-            { name: "Prabhsimran Singh", role: "Wicketkeeper", base: 1.0 },
-            { name: "Jitesh Sharma", role: "Wicketkeeper", base: 1.0 },
-            { name: "Jonny Bairstow", role: "Wicketkeeper", base: 2.0 },
-            { name: "Anuj Rawat", role: "Wicketkeeper", base: 0.5 },
-            { name: "Dinesh Karthik", role: "Wicketkeeper", base: 2.0 },
-            { name: "KS Bharat", role: "Wicketkeeper", base: 0.75 },
-            { name: "Dhruv Jurel", role: "Wicketkeeper", base: 1.0 },
-            { name: "Kumar Kushagra", role: "Wicketkeeper", base: 0.75 },
-            { name: "Matthew Wade", role: "Wicketkeeper", base: 1.5 },
-            { name: "Litton Das", role: "Wicketkeeper", base: 1.0 },
-
-            { name: "Hardik Pandya", role: "All-Rounder", base: 2.0 },
-            { name: "Glenn Maxwell", role: "All-Rounder", base: 2.0 },
-            { name: "Ravindra Jadeja", role: "All-Rounder", base: 2.0 },
-            { name: "Sunil Narine", role: "All-Rounder", base: 2.0 },
-            { name: "Andre Russell", role: "All-Rounder", base: 2.0 },
-            { name: "Axar Patel", role: "All-Rounder", base: 2.0 },
-            { name: "Rachin Ravindra", role: "All-Rounder", base: 1.5 },
-            { name: "Shivam Dube", role: "All-Rounder", base: 1.5 },
-            { name: "Nitish Reddy", role: "All-Rounder", base: 1.0 },
-            { name: "Abhishek Sharma", role: "All-Rounder", base: 1.5 },
-            { name: "Cameron Green", role: "All-Rounder", base: 2.0 },
-            { name: "Marcus Stoinis", role: "All-Rounder", base: 2.0 },
-            { name: "Krunal Pandya", role: "All-Rounder", base: 1.5 },
-            { name: "Deepak Hooda", role: "All-Rounder", base: 1.0 },
-            { name: "Ravichandran Ashwin", role: "All-Rounder", base: 2.0 },
-            { name: "Marco Jansen", role: "All-Rounder", base: 1.25 },
-            { name: "Washington Sundar", role: "All-Rounder", base: 1.5 },
-            { name: "Shahbaz Ahmed", role: "All-Rounder", base: 1.0 },
-            { name: "Harpreet Brar", role: "All-Rounder", base: 0.75 },
-            { name: "Sam Curran", role: "All-Rounder", base: 2.0 },
-            { name: "Liam Livingstone", role: "All-Rounder", base: 2.0 },
-            { name: "Harshal Patel", role: "All-Rounder", base: 1.5 },
-            { name: "Tom Curran", role: "All-Rounder", base: 1.0 },
-            { name: "Shardul Thakur", role: "All-Rounder", base: 1.5 },
-            { name: "Praveen Dubey", role: "All-Rounder", base: 0.5 },
-            { name: "Riyan Parag", role: "All-Rounder", base: 1.5 },
-            { name: "Tanush Kotian", role: "All-Rounder", base: 0.5 },
-            { name: "Shams Mulani", role: "All-Rounder", base: 0.5 },
-            { name: "Ramandeep Singh", role: "All-Rounder", base: 0.5 },
-            { name: "Rahul Tewatia", role: "All-Rounder", base: 1.5 },
-            { name: "Shahrukh Khan", role: "All-Rounder", base: 1.0 },
-            { name: "Azmatullah Omarzai", role: "All-Rounder", base: 1.0 },
-            { name: "Jayant Yadav", role: "All-Rounder", base: 1.0 },
-            { name: "Vijay Shankar", role: "All-Rounder", base: 1.0 },
-            { name: "Daryl Mitchell", role: "All-Rounder", base: 1.5 },
-            { name: "Mitchell Santner", role: "All-Rounder", base: 1.5 },
-            { name: "RS Hangargekar", role: "All-Rounder", base: 0.5 },
-            { name: "Nishant Sindhu", role: "All-Rounder", base: 0.5 },
-            { name: "Ajay Mandal", role: "All-Rounder", base: 0.5 },
-            { name: "Shakib Al Hasan", role: "All-Rounder", base: 1.5 },
-
-            { name: "Jasprit Bumrah", role: "Bowler", base: 2.0 },
-            { name: "Rashid Khan", role: "Bowler", base: 2.0 },
-            { name: "Pat Cummins", role: "Bowler", base: 2.0 },
-            { name: "Arshdeep Singh", role: "Bowler", base: 1.5 },
-            { name: "Mohammed Shami", role: "Bowler", base: 2.0 },
-            { name: "Trent Boult", role: "Bowler", base: 2.0 },
-            { name: "Mitchell Starc", role: "Bowler", base: 2.0 },
-            { name: "Kuldeep Yadav", role: "Bowler", base: 2.0 },
-            { name: "Matheesha Pathirana", role: "Bowler", base: 1.5 },
-            { name: "Ravi Bishnoi", role: "Bowler", base: 1.5 },
-            { name: "Mayank Yadav", role: "Bowler", base: 1.0 },
-            { name: "Mohsin Khan", role: "Bowler", base: 1.0 },
-            { name: "Yuzvendra Chahal", role: "Bowler", base: 2.0 },
-            { name: "Josh Hazlewood", role: "Bowler", base: 2.0 },
-            { name: "Adam Zampa", role: "Bowler", base: 1.5 },
-            { name: "Spencer Johnson", role: "Bowler", base: 1.0 },
-            { name: "Gerald Coetzee", role: "Bowler", base: 1.25 },
-            { name: "Nandre Burger", role: "Bowler", base: 1.0 },
-            { name: "Bhuvneshwar Kumar", role: "Bowler", base: 2.0 },
-            { name: "T. Natarajan", role: "Bowler", base: 1.5 },
-            { name: "Kagiso Rabada", role: "Bowler", base: 2.0 },
-            { name: "Karn Sharma", role: "Bowler", base: 0.5 },
-            { name: "Reece Topley", role: "Bowler", base: 1.0 },
-            { name: "Lockie Ferguson", role: "Bowler", base: 1.5 },
-            { name: "Mukesh Kumar", role: "Bowler", base: 1.0 },
-            { name: "Khaleel Ahmed", role: "Bowler", base: 1.0 },
-            { name: "Vicky Ostwal", role: "Bowler", base: 0.5 },
-            { name: "Rasikh Dar", role: "Bowler", base: 0.5 },
-            { name: "Suyash Sharma", role: "Bowler", base: 0.5 },
-            { name: "Vaibhav Arora", role: "Bowler", base: 0.5 },
-            { name: "Harshit Rana", role: "Bowler", base: 1.0 },
-            { name: "Chetan Sakariya", role: "Bowler", base: 0.75 },
-            { name: "Kamlesh Nagarkoti", role: "Bowler", base: 0.5 },
-            { name: "Shivam Mavi", role: "Bowler", base: 1.0 },
-            { name: "Kuldeep Sen", role: "Bowler", base: 0.5 },
-            { name: "Navdeep Saini", role: "Bowler", base: 1.0 },
-            { name: "Sandeep Sharma", role: "Bowler", base: 1.0 },
-            { name: "Kumar Kartikeya", role: "Bowler", base: 0.5 },
-            { name: "Piyush Chawla", role: "Bowler", base: 1.0 },
-            { name: "Akash Madhwal", role: "Bowler", base: 0.75 },
-            { name: "Avesh Khan", role: "Bowler", base: 1.5 },
-            { name: "Mohit Sharma", role: "Bowler", base: 1.5 },
-            { name: "Noor Ahmad", role: "Bowler", base: 1.5 },
-            { name: "Darshan Nalkande", role: "Bowler", base: 0.5 },
-            { name: "Kane Richardson", role: "Bowler", base: 1.0 },
-            { name: "Mustafizur Rahman", role: "Bowler", base: 1.5 },
-            { name: "Maheesh Theekshana", role: "Bowler", base: 1.5 },
-            { name: "Simarjeet Singh", role: "Bowler", base: 0.5 },
-            { name: "Prashant Solanki", role: "Bowler", base: 0.5 },
-            { name: "Sandeep Warrier", role: "Bowler", base: 0.5 },
-            { name: "Taskin Ahmed", role: "Bowler", base: 1.0 }
-        ];
-
-        // Group players into sets: Batsman, Wicketkeeper, All-Rounder, Bowler
-        const playerPool = [
-            ...rawPlayerPool.filter(p => p.role === "Batsman"),
-            ...rawPlayerPool.filter(p => p.role === "Wicketkeeper"),
-            ...rawPlayerPool.filter(p => p.role === "All-Rounder"),
-            ...rawPlayerPool.filter(p => p.role === "Bowler")
-        ];
-
-        // Teams Database with Purses
-        let teamsData = {
-            "CSK": { purse: 120.0, players: [] },
-            "RCB": { purse: 120.0, players: [] },
-            "MI": { purse: 120.0, players: [] },
-            "KKR": { purse: 120.0, players: [] },
-            "LSG": { purse: 120.0, players: [] },
-            "GT": { purse: 120.0, players: [] },
-            "SRH": { purse: 120.0, players: [] },
-            "DC": { purse: 120.0, players: [] },
-            "PBKS": { purse: 120.0, players: [] },
-            "RR": { purse: 120.0, players: [] }
-        };
-
-        let currentPlayerIndex = 0;
-        let currentHighestBid = 2.0;
-        let currentBidder = "None";
-        let userTeam = "LSG";
-
-        function joinAuction() {
-            const name = document.getElementById('user-name').value;
-            userTeam = document.getElementById('user-team').value;
-            const room = document.getElementById('room-id').value;
-
-            if(!name) {
-                alert("Please enter your name!");
-                return;
+        for (let i = 0; i < select.options.length; i++) {
+          const opt = select.options[i];
+          if (opt.value && takenTeams[opt.value] && takenTeams[opt.value].joined) {
+            opt.disabled = true;
+            if (!opt.text.includes("(Taken)")) {
+              opt.text = opt.text + " - ❌ TAKEN";
             }
-
-            document.getElementById('display-room').innerText = room;
-            document.getElementById('display-team').innerText = userTeam;
-            
-            updatePurseDisplay();
-            updateTeamsStatusBoard();
-
-            document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('auction-arena').classList.remove('hidden');
-            loadPlayer();
+          }
         }
+      });
+    }
 
-        function updatePurseDisplay() {
-            document.getElementById('display-purse').innerText = `₹${teamsData[userTeam].purse.toFixed(2)} Cr`;
+    function joinRoom() {
+      const code = document.getElementById("roomCode").value.trim().toUpperCase();
+      const team = document.getElementById("teamSelect").value;
+      amIHost = document.getElementById("isHost").checked;
+
+      if(!code || !team) return alert("Room Code & Team செலக்ட் பண்ணுடா!");
+
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      playIPLTrumpetSound();
+
+      currentRoom = code;
+      myTeam = team;
+
+      // Apply Dynamic Neon Border based on Team
+      applyTeamNeonGlow(myTeam);
+
+      const teamRef = db.ref("rooms/" + currentRoom + "/teams/" + myTeam);
+      teamRef.update({ purse: 120.0, joined: true });
+
+      document.getElementById("displayRoom").innerText = "Room: " + currentRoom;
+      document.getElementById("displayTeam").innerText = myTeam;
+      document.getElementById("totalPlayersNo").innerText = playersList.length;
+      document.getElementById("setup-box").classList.add("hidden");
+      document.getElementById("game-box").classList.remove("hidden");
+
+      if(amIHost) document.getElementById("host-controls").classList.remove("hidden");
+
+      const roomRef = db.ref("rooms/" + currentRoom);
+      roomRef.get().then((snapshot) => {
+        if(!snapshot.exists()) {
+          roomRef.update({
+            currentPlayerIndex: 0,
+            currentBid: playersList[0].basePrice,
+            highestBidder: "None",
+            lastBidTime: 0,
+            soldTrigger: 0,
+            lastBidLog: "Auction Arena Ready!"
+          });
         }
+      });
 
-        function updateTeamsStatusBoard() {
-            let html = "";
-            for (let t in teamsData) {
-                html += `<div class="flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800">
-                    <span class="font-bold text-white">${t}</span>
-                    <span class="text-cyan-400">₹${teamsData[t].purse.toFixed(2)} Cr</span>
-                    <span class="text-slate-400 text-[10px]">${teamsData[t].players.length} Players</span>
-                </div>`;
+      roomRef.on("value", (snapshot) => {
+        const data = snapshot.val();
+        if(data) {
+          const pIndex = data.currentPlayerIndex || 0;
+          const player = playersList[pIndex];
+
+          document.getElementById("playerName").innerText = player.name;
+          document.getElementById("playerRole").innerText = player.role;
+          document.getElementById("playerBasePrice").innerText = player.basePrice.toFixed(2);
+          document.getElementById("playerImage").src = player.image;
+          document.getElementById("currentPlayerNo").innerText = pIndex + 1;
+
+          currentBidValue = data.currentBid || player.basePrice;
+          document.getElementById("currentBid").innerText = currentBidValue.toFixed(2);
+          document.getElementById("highestBidder").innerText = data.highestBidder || "None";
+
+          handleBidTimer(data.lastBidTime, data.highestBidder);
+
+          if(data.lastBidLog) {
+            updateActivityLog(data.lastBidLog);
+          }
+
+          if(data.soldTrigger && data.soldTrigger > lastSoldTrigger) {
+            triggerSoldEffect(player.name, data.highestBidder, currentBidValue);
+            lastSoldTrigger = data.soldTrigger;
+          }
+
+          if(data.teams) {
+            roomTeamsData = data.teams;
+            renderAllTeamsGrid();
+            if(data.teams[myTeam]) {
+              myPurse = data.teams[myTeam].purse !== undefined ? data.teams[myTeam].purse : 120.0;
+              document.getElementById("displayPurse").innerText = myPurse.toFixed(2);
+              updatePurseBar(myPurse);
             }
-            document.getElementById('teams-status-list').innerHTML = html;
+          }
         }
+      });
+    }
 
-        function addMessage(msg, colorClass = "text-slate-300") {
-            const stream = document.getElementById('bidding-stream');
-            const div = document.createElement('div');
-            div.className = colorClass;
-            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            stream.prepend(div);
+    function applyTeamNeonGlow(team) {
+      const box = document.getElementById("game-box");
+      const glows = {
+        CSK: "0 0 35px rgba(234, 179, 8, 0.4)",
+        MI: "0 0 35px rgba(59, 130, 246, 0.4)",
+        RCB: "0 0 35px rgba(239, 68, 68, 0.4)",
+        KKR: "0 0 35px rgba(168, 85, 247, 0.4)",
+        DC: "0 0 35px rgba(14, 165, 233, 0.4)",
+        GT: "0 0 35px rgba(20, 184, 166, 0.4)",
+        RR: "0 0 35px rgba(236, 72, 153, 0.4)",
+        SRH: "0 0 35px rgba(249, 115, 22, 0.4)",
+        LSG: "0 0 35px rgba(52, 211, 153, 0.4)",
+        PBKS: "0 0 35px rgba(225, 29, 72, 0.4)"
+      };
+      if(glows[team]) {
+        box.style.boxShadow = glows[team];
+      }
+    }
+
+    function updatePurseBar(purse) {
+      const percentage = (purse / 120.0) * 100;
+      const bar = document.getElementById("purseBar");
+      bar.style.width = `${Math.max(0, percentage)}%`;
+      if(percentage < 25) {
+        bar.className = "bg-gradient-to-r from-red-700 via-red-500 to-rose-400 h-full rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(239,68,68,0.5)]";
+      } else if(percentage < 60) {
+        bar.className = "bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-300 h-full rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(234,179,8,0.5)]";
+      } else {
+        bar.className = "bg-gradient-to-r from-emerald-600 via-emerald-400 to-teal-400 h-full rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(16,185,129,0.5)]";
+      }
+    }
+
+    function updateActivityLog(msg) {
+      const logBox = document.getElementById("activityLog");
+      const p = document.createElement("p");
+      p.className = "text-yellow-400 border-l-2 border-yellow-500 pl-2.5 py-0.5 animate-pulse font-medium";
+      p.innerText = `> ${msg}`;
+      logBox.prepend(p);
+    }
+
+    function renderAllTeamsGrid() {
+      const grid = document.getElementById("allTeamsGrid");
+      grid.innerHTML = "";
+
+      Object.keys(teamLogos).forEach((tKey) => {
+        const tData = roomTeamsData[tKey] || { purse: 120.0, players: [] };
+        const pList = tData.players ? (Array.isArray(tData.players) ? tData.players : Object.values(tData.players)) : [];
+        
+        let bat = 0, bowl = 0, wk = 0, ar = 0;
+        pList.forEach(p => {
+          if (p.role && p.role.includes("WK")) wk++;
+          else if (p.role && p.role.includes("ALL")) ar++;
+          else if (p.role && p.role.includes("BOWLER")) bowl++;
+          else bat++;
+        });
+
+        const card = document.createElement("div");
+        card.className = `bg-slate-900/90 p-2.5 rounded-xl border ${tKey === myTeam ? 'border-yellow-400 bg-slate-800 shadow-[0_0_12px_rgba(234,179,8,0.3)]' : 'border-slate-800'} flex flex-col items-center justify-between text-center cursor-pointer hover:bg-slate-800 transition shadow-md`;
+        card.onclick = () => showSquadAlert(tKey, pList);
+
+        card.innerHTML = `
+          <img src="${teamLogos[tKey]}" class="w-8 h-8 object-contain mb-1" alt="${tKey}">
+          <span class="font-extrabold text-xs text-white">${tKey}</span>
+          <span class="text-[11px] text-emerald-400 font-bold">₹${(tData.purse || 120).toFixed(1)}Cr</span>
+          <div class="text-[9px] text-slate-400 mt-1 flex gap-1 font-semibold">
+            <span>🏏${bat+ar}</span>
+            <span>⚾${bowl}</span>
+            <span>🧤${wk}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function showSquadAlert(tKey, list) {
+      let playerListText = "";
+      if (list && list.length > 0) {
+        playerListText = list.map(p => `• ${p.name} [${p.role || 'PLAYER'}] - ₹${p.price} Cr`).join("\n");
+      }
+      alert(`🏏 ${tKey} SQUAD PLAYERS (${list.length}):\n\n${playerListText || 'இன்னும் எந்த பிளேயரையும் வாங்கலடா!'}`);
+    }
+
+    function handleBidTimer(lastBidTime, highestBidder) {
+      clearInterval(countdownInterval);
+
+      if (!lastBidTime || highestBidder === "None") {
+        document.getElementById("timerDisplay").innerText = "10s";
+        return;
+      }
+
+      countdownInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - lastBidTime) / 1000);
+        const remaining = 10 - elapsed;
+
+        if (remaining > 0) {
+          document.getElementById("timerDisplay").innerText = remaining + "s";
+        } else {
+          document.getElementById("timerDisplay").innerText = "0s";
+          clearInterval(countdownInterval);
+
+          if (amIHost && highestBidder !== "None") {
+            sellPlayer();
+          }
         }
+      }, 1000);
+    }
 
-        function loadPlayer() {
-            if(currentPlayerIndex >= playerPool.length) {
-                currentPlayerIndex = 0;
-            }
-            const p = playerPool[currentPlayerIndex];
-            currentHighestBid = p.base;
-            currentBidder = "None";
+    function placeBid(increment) {
+      playCoinSound();
+      const nextBid = currentBidValue + increment;
+      if (nextBid > myPurse) return alert("உன்கிட்ட போதுமான பர்ஸ் பேலன்ஸ் காசு இல்லைடா!");
 
-            document.getElementById('player-name').innerText = p.name;
-            document.getElementById('player-role').innerText = p.role;
-            document.getElementById('player-base').innerText = `₹${p.base.toFixed(2)} Cr`;
-            document.getElementById('player-index').innerText = currentPlayerIndex + 1;
-            document.getElementById('current-bid').innerText = `₹${p.base.toFixed(2)} Cr`;
-            document.getElementById('bidder-name').innerText = currentBidder;
+      db.ref("rooms/" + currentRoom).update({
+        currentBid: nextBid,
+        highestBidder: myTeam,
+        lastBidTime: Date.now(),
+        lastBidLog: `${myTeam} placed a bid for ₹${nextBid.toFixed(2)} Cr`
+      });
+    }
+
+    function useRTM() {
+      playCoinSound();
+      const nextBid = currentBidValue + 0.25;
+      if (nextBid > myPurse) return alert("RTM யூஸ் பண்ண போதுமான பர்ஸ் காசு இல்லைடா!");
+
+      db.ref("rooms/" + currentRoom).update({
+        currentBid: nextBid,
+        highestBidder: `${myTeam} (RTM)`,
+        lastBidTime: Date.now(),
+        lastBidLog: `🃏 ${myTeam} exercised RTM CARD for ₹${nextBid.toFixed(2)} Cr!`
+      });
+    }
+
+    function sellPlayer() {
+      db.ref("rooms/" + currentRoom).get().then((snapshot) => {
+        const data = snapshot.val();
+        const winningTeam = data.highestBidder;
+        const price = data.currentBid;
+        const pIndex = data.currentPlayerIndex || 0;
+        const currPlayer = playersList[pIndex];
+
+        if (winningTeam !== "None") {
+          const cleanTeam = winningTeam.replace(" (RTM)", "");
+          const teamRef = db.ref(`rooms/${currentRoom}/teams/${cleanTeam}`);
+          teamRef.get().then((tSnap) => {
+            const tVal = tSnap.val() || { purse: 120.0, players: [] };
+            const newPurse = tVal.purse - price;
+            const existingPlayers = tVal.players ? (Array.isArray(tVal.players) ? tVal.players : Object.values(tVal.players)) : [];
             
-            addMessage(`📢 Set Update: <b>${p.name}</b> (${p.role}) entered the auction block at Base Price ₹${p.base.toFixed(2)} Cr.`, "text-cyan-400");
+            existingPlayers.push({ name: currPlayer.name, role: currPlayer.role, price: price });
+
+            teamRef.update({
+              purse: newPurse,
+              players: existingPlayers
+            });
+
+            db.ref("rooms/" + currentRoom).update({
+              soldTrigger: Date.now(),
+              lastBidTime: 0,
+              lastBidLog: `🔨 SOLD! ${currPlayer.name} goes to ${winningTeam} for ₹${price.toFixed(2)} Cr!`
+            });
+          });
         }
+      });
+    }
 
-        function placeBid(increment) {
-            currentHighestBid += increment;
-            currentBidder = userTeam;
-            
-            document.getElementById('current-bid').innerText = `₹${currentHighestBid.toFixed(2)} Cr`;
-            document.getElementById('bidder-name').innerText = currentBidder;
-            
-            addMessage(`🔥 <b>${userTeam}</b> placed a bid of <b>₹${currentHighestBid.toFixed(2)} Cr</b> for ${playerPool[currentPlayerIndex].name}!`, "text-emerald-400");
-        }
+    function nextPlayer() {
+      db.ref("rooms/" + currentRoom).get().then((snapshot) => {
+        const data = snapshot.val();
+        let nextIndex = (data.currentPlayerIndex || 0) + 1;
+        if(nextIndex >= playersList.length) nextIndex = 0;
+        
+        db.ref("rooms/" + currentRoom).update({
+          currentPlayerIndex: nextIndex,
+          currentBid: playersList[nextIndex].basePrice,
+          highestBidder: "None",
+          lastBidTime: 0,
+          lastBidLog: `Next Player: ${playersList[nextIndex].name}`
+        });
+      });
+    }
 
-        function useRTM() {
-            addMessage(`⚡ <b>${userTeam}</b> successfully activated <b>RTM Card</b>!`, "text-amber-400");
-            alert(`RTM Card activated by ${userTeam}!`);
-        }
+    // AUDIO EFFECTS
+    function playCoinSound() {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(987.77, now);
+      osc.frequency.exponentialRampToValueAtTime(1318.51, now + 0.08);
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    }
 
-        function nextPlayer() {
-            currentPlayerIndex++;
-            loadPlayer();
-        }
+    function playIPLTrumpetSound() {
+      if (!audioCtx) return;
+      const notes = [261.63, 329.63, 392.00, 523.25];
+      notes.forEach((freq, i) => {
+        setTimeout(() => {
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        }, i * 120);
+      });
+    }
 
-        function soldPlayer() {
-            if(currentBidder === "None") {
-                alert("No bids placed yet!");
-                return;
-            }
-            const p = playerPool[currentPlayerIndex];
-            teamsData[currentBidder].purse -= currentHighestBid;
-            teamsData[currentBidder].players.push({ name: p.name, price: currentHighestBid });
+    function triggerSoldEffect(playerName, winner, price) {
+      confetti({ particleCount: 180, spread: 100, origin: { y: 0.6 } });
 
-            addMessage(`🔨 SOLD! <b>${p.name}</b> goes to <b>${currentBidder}</b> for <b>₹${currentHighestBid.toFixed(2)} Cr</b>!`, "text-yellow-400");
-            alert(`Player sold to ${currentBidder} for ₹${currentHighestBid.toFixed(2)} Cr!`);
-            
-            updatePurseDisplay();
-            updateTeamsStatusBoard();
+      document.getElementById("tickerNews").innerText = `🔥 SOLD! ${playerName.toUpperCase()} BOUGHT BY ${winner.toUpperCase()} FOR ₹${price.toFixed(2)} CR! 🔥`;
 
-            currentPlayerIndex++;
-            loadPlayer();
-        }
-    </script>
+      // Digital Hammer Drop Animation Effect on Card Wrapper
+      const cardWrap = document.getElementById("playerCardWrapper");
+      cardWrap.classList.add("animate-hammer");
+      setTimeout(() => { cardWrap.classList.remove("animate-hammer"); }, 400);
+
+      if (audioCtx) {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+
+        gain.gain.setValueAtTime(1.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.15);
+      }
+    }
+  </script>
 </body>
 </html>
