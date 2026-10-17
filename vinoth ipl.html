@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Mega Auction 2026 - Broadcast Edition</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        /* Stadium Radial Glow & Neon Graphics Enhancement */
+        body {
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        .stadium-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.15), inset 0 0 15px rgba(56, 189, 248, 0.05);
+        }
+        .neon-title {
+            text-shadow: 0 0 20px rgba(250, 204, 21, 0.6), 0 0 40px rgba(250, 204, 21, 0.3);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start p-4 md:p-6">
+
+    <!-- Splash / Setup Screen -->
+    <div id="setup-screen" class="w-full max-w-md stadium-card rounded-2xl p-6 shadow-2xl mt-12">
+        <h1 class="text-2xl font-black text-yellow-400 text-center mb-6 neon-title uppercase">IPL Mega Auction 2026</h1>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Enter Your Name</label>
+                <input type="text" id="user-name" placeholder="e.g. Vinoth" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+            </div>
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Select Franchise</label>
+                <select id="user-team" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+                    <option value="CSK">Chennai Super Kings (CSK)</option>
+                    <option value="RCB">Royal Challengers Bengaluru (RCB)</option>
+                    <option value="MI">Mumbai Indians (MI)</option>
+                    <option value="KKR">Kolkata Knight Riders (KKR)</option>
+                    <option value="LSG">Lucknow Super Giants (LSG)</option>
+                    <option value="GT">Gujarat Titans (GT)</option>
+                    <option value="SRH">Sunrisers Hyderabad (SRH)</option>
+                    <option value="DC">Delhi Capitals (DC)</option>
+                    <option value="PBKS">Punjab Kings (PBKS)</option>
+                    <option value="RR">Rajasthan Royals (RR)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Room ID</label>
+                <input type="text" id="room-id" value="IPL2026" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+            </div>
+            <button onclick="joinAuction()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 cursor-pointer uppercase tracking-wider">
+                Enter Auction Arena 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Auction Arena -->
+    <main id="auction-arena" class="w-full max-w-4xl stadium-card rounded-2xl p-6 shadow-2xl hidden">
+        
+        <!-- Room & Purse Info -->
+        <div class="flex flex-wrap justify-between items-center mb-6 border-b border-slate-700 pb-4 text-sm md:text-base font-medium text-slate-300">
+            <div>Room: <span id="display-room" class="text-yellow-400 font-bold">IPL2026</span></div>
+            <div>Franchise: <span id="display-team" class="text-emerald-400 font-bold">LSG</span></div>
+            <div>Purse Left: <span id="display-purse" class="text-cyan-400 font-bold">₹120.00 Cr</span></div>
+        </div>
+
+        <!-- Player Card Arena -->
+        <div class="flex flex-col items-center justify-center bg-slate-900/80 border border-slate-700/60 rounded-xl p-6 mb-6 shadow-inner">
+            <span id="player-role" class="bg-amber-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-lg">
+                Batsman
+            </span>
+            
+            <!-- Player Avatar Graphic -->
+            <div class="w-28 h-28 md:w-32 md:h-32 bg-gradient-to-tr from-pink-500 to-rose-400 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/20 mb-4 transform hover:scale-105 transition-transform duration-300">
+                <svg class="w-16 h-16 text-white drop-shadow-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            </div>
+
+            <h2 id="player-name" class="text-2xl md:text-3xl font-extrabold text-white tracking-wide">Virat Kohli</h2>
+            <p class="text-slate-400 text-sm mt-1">Base Price: <span id="player-base" class="text-emerald-400 font-semibold">₹2.00 Cr</span></p>
+            <p class="text-slate-500 text-xs mt-1">Player <span id="player-index" class="text-slate-300 font-bold">1</span> of 150 in Pool</p>
+        </div>
+
+        <!-- Bidding Stats & Timer -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 text-center shadow-md">
+                <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">Current Highest Bid</p>
+                <div id="current-bid" class="text-3xl font-black text-emerald-400 drop-shadow">₹2.00 Cr</div>
+                <p class="text-xs text-slate-400 mt-1">By: <span id="bidder-name" class="text-white font-medium">None</span></p>
+            </div>
+            
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 text-center shadow-md">
+                <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">Bid Timer</p>
+                <div id="bid-timer" class="text-3xl font-black text-rose-500 drop-shadow animate-pulse">15s</div>
+                <p class="text-xs text-slate-400 mt-1">Auto Sold on 0s</p>
+            </div>
+        </div>
+
+        <!-- Action Bidding Buttons -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <button onclick="placeBid(0.5)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 transform active:scale-95 text-sm cursor-pointer">
+                + ₹50 LAKHS
+            </button>
+            <button onclick="placeBid(2)" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 transform active:scale-95 text-sm cursor-pointer">
+                + ₹2 CRORES
+            </button>
+            <button onclick="placeBid(5)" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 transform active:scale-95 text-sm cursor-pointer">
+                + ₹5 CRORES
+            </button>
+            <button onclick="useRTM()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-3 px-4 rounded-xl shadow-lg transition duration-200 transform active:scale-95 text-sm cursor-pointer">
+                ⚡ USE RTM!
+            </button>
+        </div>
+
+        <!-- Host Controls (Next Player) -->
+        <div class="mb-6 text-center">
+            <button onclick="nextPlayer()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition text-xs uppercase tracking-wider cursor-pointer">
+                ⏭️ Next Player (Host Control)
+            </button>
+        </div>
+
+        <!-- Live Bidding Stream Log -->
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4">
+            <h3 class="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Live Bidding Stream</h3>
+            <div id="bidding-stream" class="text-slate-400 text-xs italic">Auction session started. Waiting for bids...</div>
+        </div>
+
+    </main>
+
+    <script>
+        // Full 150+ Player Pool Data
+        const playerPool = [
+            { name: "Virat Kohli", role: "Batsman", base: 2.0 },
+            { name: "Rohit Sharma", role: "Batsman", base: 2.0 },
+            { name: "MS Dhoni", role: "Wicketkeeper", base: 2.0 },
+            { name: "Jasprit Bumrah", role: "Bowler", base: 2.0 },
+            { name: "Hardik Pandya", role: "All-Rounder", base: 2.0 },
+            { name: "Rashid Khan", role: "Bowler", base: 2.0 },
+            { name: "Glenn Maxwell", role: "All-Rounder", base: 2.0 },
+            { name: "Travis Head", role: "Batsman", base: 2.0 },
+            { name: "Suryakumar Yadav", role: "Batsman", base: 2.0 },
+            { name: "Ravindra Jadeja", role: "All-Rounder", base: 2.0 },
+            { name: "Pat Cummins", role: "Bowler", base: 2.0 },
+            { name: "Jos Buttler", role: "Wicketkeeper", base: 2.0 },
+            { name: "Shreyas Iyer", role: "Batsman", base: 2.0 },
+            { name: "Rishabh Pant", role: "Wicketkeeper", base: 2.0 },
+            { name: "Sanju Samson", role: "Wicketkeeper", base: 2.0 },
+            { name: "Yashasvi Jaiswal", role: "Batsman", base: 1.5 },
+            { name: "Shubman Gill", role: "Batsman", base: 2.0 },
+            { name: "KL Rahul", role: "Wicketkeeper", base: 2.0 },
+            { name: "Arshdeep Singh", role: "Bowler", base: 1.5 },
+            { name: "Mohammed Shami", role: "Bowler", base: 2.0 },
+            { name: "Trent Boult", role: "Bowler", base: 2.0 },
+            { name: "Mitchell Starc", role: "Bowler", base: 2.0 },
+            { name: "Heinrich Klaasen", role: "Wicketkeeper", base: 2.0 },
+            { name: "Sunil Narine", role: "All-Rounder", base: 2.0 },
+            { name: "Andre Russell", role: "All-Rounder", base: 2.0 },
+            { name: "Phil Salt", role: "Wicketkeeper", base: 1.5 },
+            { name: "Axar Patel", role: "All-Rounder", base: 2.0 },
+            { name: "Kuldeep Yadav", role: "Bowler", base: 2.0 },
+            { name: "Faf du Plessis", role: "Batsman", base: 2.0 },
+            { name: "David Warner", role: "Batsman", base: 2.0 },
+            { name: "Kane Williamson", role: "Batsman", base: 2.0 },
+            { name: "Quinton de Kock", role: "Wicketkeeper", base: 2.0 },
+            { name: "Rachin Ravindra", role: "All-Rounder", base: 1.5 },
+            { name: "Matheesha Pathirana", role: "Bowler", base: 1.5 },
+            { name: "Shivam Dube", role: "All-Rounder", base: 1.5 },
+            { name: "Rinku Singh", role: "Batsman", base: 1.5 },
+            { name: "Tilak Varma", role: "Batsman", base: 1.5 },
+            { name: "Nitish Reddy", role: "All-Rounder", base: 1.0 },
+            { name: "Abhishek Sharma", role: "All-Rounder", base: 1.5 },
+            { name: "Ishan Kishan", role: "Wicketkeeper", base: 2.0 },
+            { name: "Cameron Green", role: "All-Rounder", base: 2.0 },
+            { name: "Marcus Stoinis", role: "All-Rounder", base: 2.0 },
+            { name: "Nicholas Pooran", role: "Wicketkeeper", base: 2.0 },
+            { name: "Krunal Pandya", role: "All-Rounder", base: 1.5 },
+            { name: "Deepak Hooda", role: "All-Rounder", base: 1.0 },
+            { name: "Ravi Bishnoi", role: "Bowler", base: 1.5 },
+            { name: "Mayank Yadav", role: "Bowler", base: 1.0 },
+            { name: "Mohsin Khan", role: "Bowler", base: 1.0 },
+            { name: "Yuzvendra Chahal", role: "Bowler", base: 2.0 },
+            { name: "Ravichandran Ashwin", role: "All-Rounder", base: 2.0 },
+            { name: "Jos Hazlewood", role: "Bowler", base: 2.0 },
+            { name: "Adam Zampa", role: "Bowler", base: 1.5 },
+            { name: "Spencer Johnson", role: "Bowler", base: 1.0 },
+            { name: "Gerald Coetzee", role: "Bowler", base: 1.25 },
+            { name: "Nandre Burger", role: "Bowler", base: 1.0 },
+            { name: "Jake Fraser-McGurk", role: "Batsman", base: 1.0 },
+            { name: "Tristan Stubbs", role: "Wicketkeeper", base: 1.0 },
+            { name: "Aiden Markram", role: "Batsman", base: 2.0 },
+            { name: "Marco Jansen", role: "All-Rounder", base: 1.25 },
+            { name: "Bhuvneshwar Kumar", role: "Bowler", base: 2.0 },
+            { name: "T. Natarajan", role: "Bowler", base: 1.5 },
+            { name: "Rahul Tripathi", role: "Batsman", base: 1.0 },
+            { name: "Washington Sundar", role: "All-Rounder", base: 1.5 },
+            { name: "Shahbaz Ahmed", role: "All-Rounder", base: 1.0 },
+            { name: "Harpreet Brar", role: "All-Rounder", base: 0.75 },
+            { name: "Prabhsimran Singh", role: "Wicketkeeper", base: 1.0 },
+            { name: "Jitesh Sharma", role: "Wicketkeeper", base: 1.0 },
+            { name: "Sam Curran", role: "All-Rounder", base: 2.0 },
+            { name: "Jonny Bairstow", role: "Wicketkeeper", base: 2.0 },
+            { name: "Liam Livingstone", role: "All-Rounder", base: 2.0 },
+            { name: "Kagiso Rabada", role: "Bowler", base: 2.0 },
+            { name: "Rilee Rossouw", role: "Batsman", base: 1.5 },
+            { name: "Harshal Patel", role: "All-Rounder", base: 1.5 },
+            { name: "Devdutt Padikkal", role: "Batsman", base: 1.0 },
+            { name: "Rajat Patidar", role: "Batsman", base: 1.0 },
+            { name: "Anuj Rawat", role: "Wicketkeeper", base: 0.5 },
+            { name: "Dinesh Karthik", role: "Wicketkeeper", base: 2.0 },
+            { name: "Karn Sharma", role: "Bowler", base: 0.5 },
+            { name: "Reece Topley", role: "Bowler", base: 1.0 },
+            { name: "Lockie Ferguson", role: "Bowler", base: 1.5 },
+            { name: "Tom Curran", role: "All-Rounder", base: 1.0 },
+            { name: "Shardul Thakur", role: "All-Rounder", base: 1.5 },
+            { name: "Ajinkya Rahane", role: "Batsman", base: 1.5 },
+            { name: "Prithvi Shaw", role: "Batsman", base: 1.5 },
+            { name: "Mukesh Kumar", role: "Bowler", base: 1.0 },
+            { name: "Khaleel Ahmed", role: "Bowler", base: 1.0 },
+            { name: "Praveen Dubey", role: "All-Rounder", base: 0.5 },
+            { name: "Vicky Ostwal", role: "Bowler", base: 0.5 },
+            { name: "Rasikh Dar", role: "Bowler", base: 0.5 },
+            { name: "Suyash Sharma", role: "Bowler", base: 0.5 },
+            { name: "Vaibhav Arora", role: "Bowler", base: 0.5 },
+            { name: "Harshit Rana", role: "Bowler", base: 1.0 },
+            { name: "Manish Pandey", role: "Batsman", base: 1.0 },
+            { name: "KS Bharat", role: "Wicketkeeper", base: 0.75 },
+            { name: "Chetan Sakariya", role: "Bowler", base: 0.75 },
+            { name: "Kamlesh Nagarkoti", role: "Bowler", base: 0.5 },
+            { name: "Shivam Mavi", role: "Bowler", base: 1.0 },
+            { name: "Kuldeep Sen", role: "Bowler", base: 0.5 },
+            { name: "Navdeep Saini", role: "Bowler", base: 1.0 },
+            { name: "Sandeep Sharma", role: "Bowler", base: 1.0 },
+            { name: "Dhruv Jurel", role: "Wicketkeeper", base: 1.0 },
+            { name: "Riyan Parag", role: "All-Rounder", base: 1.5 },
+            { name: "Tanush Kotian", role: "All-Rounder", base: 0.5 },
+            { name: "Kumar Kartikeya", role: "Bowler", base: 0.5 },
+            { name: "Piyush Chawla", role: "Bowler", base: 1.0 },
+            { name: "Akash Madhwal", role: "Bowler", base: 0.75 },
+            { name: "Nehal Wadhera", role: "Batsman", base: 0.5 },
+            { name: "Shams Mulani", role: "All-Rounder", base: 0.5 },
+            { name: "Kumar Kushagra", role: "Wicketkeeper", base: 0.75 },
+            { name: "Ashutosh Sharma", role: "Batsman", base: 0.5 },
+            { name: "Shashank Singh", role: "Batsman", base: 0.75 },
+            { name: "Angkrish Raghuvanshi", role: "Batsman", base: 0.5 },
+            { name: "Ramandeep Singh", role: "All-Rounder", base: 0.5 },
+            { name: "Sameer Rizvi", role: "Batsman", base: 0.75 },
+            { name: "Avesh Khan", role: "Bowler", base: 1.5 },
+            { name: "Mohit Sharma", role: "Bowler", base: 1.5 },
+            { name: "Sai Sudharsan", role: "Batsman", base: 1.5 },
+            { name: "Rahul Tewatia", role: "All-Rounder", base: 1.5 },
+            { name: "Shahrukh Khan", role: "All-Rounder", base: 1.0 },
+            { name: "Noor Ahmad", role: "Bowler", base: 1.5 },
+            { name: "Azmatullah Omarzai", role: "All-Rounder", base: 1.0 },
+            { name: "Darshan Nalkande", role: "Bowler", base: 0.5 },
+            { name: "Jayant Yadav", role: "All-Rounder", base: 1.0 },
+            { name: "Vijay Shankar", role: "All-Rounder", base: 1.0 },
+            { name: "Matthew Wade", role: "Wicketkeeper", base: 1.5 },
+            { name: "Kane Richardson", role: "Bowler", base: 1.0 },
+            { name: "Daryl Mitchell", role: "All-Rounder", base: 1.5 },
+            { name: "Mitchell Santner", role: "All-Rounder", base: 1.5 },
+            { name: "Mustafizur Rahman", role: "Bowler", base: 1.5 },
+            { name: "Maheesh Theekshana", role: "Bowler", base: 1.5 },
+            { name: "Simarjeet Singh", role: "Bowler", base: 0.5 },
+            { name: "RS Hangargekar", role: "All-Rounder", base: 0.5 },
+            { name: "Shaik Rasheed", role: "Batsman", base: 0.5 },
+            { name: "Nishant Sindhu", role: "All-Rounder", base: 0.5 },
+            { name: "Ajay Mandal", role: "All-Rounder", base: 0.5 },
+            { name: "Prashant Solanki", role: "Bowler", base: 0.5 },
+            { name: "Sandeep Warrier", role: "Bowler", base: 0.5 },
+            { name: "Muzarabani", role: "Bowler", base: 0.75 },
+            { name: "Taskin Ahmed", role: "Bowler", base: 1.0 },
+            { name: "Shakib Al Hasan", role: "All-Rounder", base: 1.5 },
+            { name: "Litton Das", role: "Wicketkeeper", base: 1.0 },
+            { name: "Mustafizur Rahman", role: "Bowler", base: 1.0 }
+        ];
+
+        let currentPlayerIndex = 0;
+        let currentHighestBid = 2.0;
+        let currentBidder = "None";
+        let userTeam = "LSG";
+        let userPurse = 120.0;
+
+        function joinAuction() {
+            const name = document.getElementById('user-name').value;
+            userTeam = document.getElementById('user-team').value;
+            const room = document.getElementById('room-id').value;
+
+            if(!name) {
+                alert("Please enter your name!");
+                return;
+            }
+
+            document.getElementById('display-room').innerText = room;
+            document.getElementById('display-team').innerText = userTeam;
+            document.getElementById('display-purse').innerText = `₹${userPurse.toFixed(2)} Cr`;
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('auction-arena').classList.remove('hidden');
+            loadPlayer();
+        }
+
+        function loadPlayer() {
+            if(currentPlayerIndex >= playerPool.length) {
+                currentPlayerIndex = 0; // Loop pool
+            }
+            const p = playerPool[currentPlayerIndex];
+            currentHighestBid = p.base;
+            currentBidder = "None";
+
+            document.getElementById('player-name').innerText = p.name;
+            document.getElementById('player-role').innerText = p.role;
+            document.getElementById('player-base').innerText = `₹${p.base.toFixed(2)} Cr`;
+            document.getElementById('player-index').innerText = currentPlayerIndex + 1;
+            document.getElementById('current-bid').innerText = `₹${p.base.toFixed(2)} Cr`;
+            document.getElementById('bidder-name').innerText = currentBidder;
+            document.getElementById('bidding-stream').innerHTML = `<span class="text-cyan-400">New player ${p.name} entered the auction block!</span>`;
+        }
+
+        function placeBid(increment) {
+            currentHighestBid += increment;
+            currentBidder = userTeam;
+            
+            document.getElementById('current-bid').innerText = `₹${currentHighestBid.toFixed(2)} Cr`;
+            document.getElementById('bidder-name').innerText = currentBidder;
+            document.getElementById('bidding-stream').innerHTML = `<span class="text-emerald-400">${userTeam} placed a bid of ₹${currentHighestBid.toFixed(2)} Cr</span>`;
+        }
+
+        function useRTM() {
+            alert(`RTM Card successfully activated by ${userTeam}! Matching highest bid of ₹${currentHighestBid.toFixed(2)} Cr.`);
+            document.getElementById('bidding-stream').innerHTML += `<br><span class="text-amber-400">⚡ RTM Used by ${userTeam}!</span>`;
+        }
+
+        function nextPlayer() {
+            currentPlayerIndex++;
+            loadPlayer();
+        }
+    </script>
+</body>
+</html>
